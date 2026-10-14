@@ -10,6 +10,7 @@ composer.lock
 
 *.DS_Store
 *.phpunit.result.cache
+.phpunit.cache/
 
 # nodejs
 node_modules/

@@ -15,7 +15,7 @@ use RuntimeException;
 use InvalidArgumentException;
 use stdClass;
 use kornrunner\Keccak;
-use phpseclib\Math\BigInteger as BigNumber;
+use phpseclib4\Math\BigInteger as BigNumber;
 
 class Utils
 {
@@ -297,7 +297,7 @@ class Utils
      * 
      * @param BigNumber|string $number
      * @param string $unit
-     * @return \phpseclib\Math\BigInteger
+     * @return \phpseclib4\Math\BigInteger
      */
     public static function toWei($number, $unit)
     {
@@ -323,26 +323,12 @@ class Utils
             }
             $whole = $whole->multiply($bnt);
 
-            // There is no pow function in phpseclib 2.0, only can see in dev-master
-            // Maybe implement own biginteger in the future
-            // See 2.0 BigInteger: https://github.com/phpseclib/phpseclib/blob/2.0/phpseclib/Math/BigInteger.php
-            // See dev-master BigInteger: https://github.com/phpseclib/phpseclib/blob/master/phpseclib/Math/BigInteger.php#L700
-            // $base = (new BigNumber(10))->pow(new BigNumber($fractionLength));
-
-            // So we switch phpseclib special global param, change in the future
-            switch (MATH_BIGINTEGER_MODE) {
-                case $whole::MODE_GMP:
-                    static $two;
-                    $powerBase = gmp_pow(gmp_init(10), (int) $fractionLength);
-                    break;
-                case $whole::MODE_BCMATH:
-                    $powerBase = bcpow('10', (string) $fractionLength, 0);
-                    break;
-                default:
-                    $powerBase = pow(10, (int) $fractionLength);
-                    break;
-            }
-            $base = new BigNumber($powerBase);
+            // phpseclib 2.0 had no pow(), so this used to switch on its MATH_BIGINTEGER_MODE
+            // global and call gmp_pow / bcpow / float pow() directly. That global and the
+            // MODE_* constants no longer exist in phpseclib 3+, and the float fallback lost
+            // precision past 10^15. phpseclib 4 has pow(), which is what the original code
+            // was waiting for: exact at any length, whichever engine phpseclib picked.
+            $base = (new BigNumber(10))->pow(new BigNumber($fractionLength));
             $fraction = $fraction->multiply($bnt)->divide($base)[0];
 
             if ($negative1 !== false) {
@@ -385,7 +371,7 @@ class Utils
      * 
      * @param BigNumber|string|int $number
      * @param string $unit
-     * @return \phpseclib\Math\BigInteger
+     * @return \phpseclib4\Math\BigInteger
      */
     public static function fromWei($number, $unit)
     {
@@ -488,7 +474,7 @@ class Utils
      * Change number or number string to bignumber.
      * 
      * @param BigNumber|string|int $number
-     * @return array|\phpseclib\Math\BigInteger
+     * @return array|\phpseclib4\Math\BigInteger
      */
     public static function toBn($number)
     {
